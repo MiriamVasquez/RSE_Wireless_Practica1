@@ -1,9 +1,0 @@
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_end_device_freertos\drivers/fsl_clock.h:580:20:CLOCK_EnableClock	24	static
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_end_device_freertos\drivers/fsl_port.h:321:20:PORT_SetPinMux	24	static
-../board/pin_mux.c:39:6:BOARD_InitPins	8	static
-../board/pin_mux.c:62:6:BOARD_InitButtons	8	static
-../board/pin_mux.c:94:6:BOARD_InitLEDs	8	static
-../board/pin_mux.c:129:6:BOARD_InitRGB	8	static
-../board/pin_mux.c:170:6:BOARD_InitSPI	8	static
-../board/pin_mux.c:205:6:BOARD_InitLPUART	8	static
-../board/pin_mux.c:245:6:BOARD_InitI2C	8	static

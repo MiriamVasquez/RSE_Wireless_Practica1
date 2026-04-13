@@ -1,4 +1,3 @@
 #List of "project<build_config><tool>=state" or "project=state" entries associated to "-ffreestanding"-related markers that are ignored in current workspace.
-#Sun Apr 12 22:24:07 CST 2026
-frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos=ignoreUIWarning
-frdmkw41z_wireless_examples_ieee_802_15_4_mwa_end_device_freertos=ignoreUIWarning
+#Sun Apr 12 22:53:48 CST 2026
+mwa_end_device_freertos=ignoreUIWarning
