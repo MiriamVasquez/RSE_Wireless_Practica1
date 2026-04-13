@@ -1,0 +1,10 @@
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:81:13:PhyPdDataRequest	48	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:191:13:PhyPlmeRxRequest	48	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:281:13:PhyPlmeCcaEdRequest	24	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:353:13:PhyPlmeSetCurrentChannelRequest	24	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:395:9:PhyPlmeGetCurrentChannelRequest	24	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:422:13:PhyPlmeSetPwrLevelRequest	24	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:463:9:PhyPlmeGetPwrLevelRequest	16	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:486:13:PhyPlmeSetPIBRequest	56	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:591:13:PhyPlmeGetPIBRequest	240	static
+../ieee_802.15.4/phy/source/MKW41Z/PhyPlmeData.c:711:13:PhyRxRetry	40	static

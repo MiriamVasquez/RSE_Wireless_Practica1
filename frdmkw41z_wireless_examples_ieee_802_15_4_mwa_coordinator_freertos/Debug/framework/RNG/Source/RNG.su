@@ -1,0 +1,10 @@
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:745:22:NVIC_EnableIRQ	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\drivers/fsl_common.h:212:20:EnableIRQ	16	static
+../framework/RNG/Source/RNG.c:97:9:RNG_Init	112	static
+../framework/RNG/Source/RNG.c:181:9:RNG_HwGetRandomNo	24	static
+../framework/RNG/Source/RNG.c:231:6:RNG_GetRandomNo	24	static
+../framework/RNG/Source/RNG.c:249:6:RNG_SetPseudoRandomNoSeed	16	static
+../framework/RNG/Source/RNG.c:279:9:RNG_GetPseudoRandomNo	136	static
+../framework/RNG/Source/RNG.c:347:10:RND_u32GetRand256	16	static
+../framework/RNG/Source/RNG.c:365:10:RND_u32GetRand	24	static
+../framework/RNG/Source/RNG.c:381:13:TRNG_ISR	8	static

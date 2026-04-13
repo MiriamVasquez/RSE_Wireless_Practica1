@@ -1,0 +1,12 @@
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:745:22:NVIC_EnableIRQ	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:804:22:NVIC_SetPriority	24	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\drivers/fsl_i2c.h:411:24:I2C_SlaveGetStatusFlags	16	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:44:10:I2C_Initialize	56	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:90:10:I2C_InstallRxCalback	32	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:108:10:I2C_InstallTxCalback	32	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:126:10:I2C_MasterSetSpeed	32	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:143:10:I2C_MasterSend	40	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:178:10:I2C_MasterReceive	40	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:215:10:I2C_SlaveSend	32	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:244:10:I2C_SlaveReceive	32	static
+../framework/SerialManager/Source/I2C_Adapter/I2C_Adapter.c:278:13:I2C_ISR	32	static

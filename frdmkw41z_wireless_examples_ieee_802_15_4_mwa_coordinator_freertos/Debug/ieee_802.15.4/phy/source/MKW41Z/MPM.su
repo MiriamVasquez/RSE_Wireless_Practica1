@@ -1,0 +1,2 @@
+../ieee_802.15.4/phy/source/MKW41Z/MPM.c:406:13:MPM_AcquirePAN	16	static
+../ieee_802.15.4/phy/source/MKW41Z/MPM.c:441:13:MPM_ReleasePAN	16	static

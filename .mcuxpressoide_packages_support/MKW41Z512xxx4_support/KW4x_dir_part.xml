@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chips chipVendor="NXP"
+       family="KW4x"
+       vendorURL="http://www.nxp.com"
+       chipURL="http://www.nxp.com/kinetis">
+   <chip name="MKW41Z512xxx4"
+         displayName="MKW41Z512xxx4"
+         xml_file="MKW41Z4_internal.xml"
+         chipURL="http://www.nxp.com/kinetis"/>
+</chips>

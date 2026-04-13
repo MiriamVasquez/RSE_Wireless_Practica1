@@ -1,0 +1,13 @@
+../framework/Lists/GenericList.c:42:6:ListInit	16	static
+../framework/Lists/GenericList.c:65:14:ListGetList	16	static
+../framework/Lists/GenericList.c:86:14:ListAddTail	16	static
+../framework/Lists/GenericList.c:130:14:ListAddHead	16	static
+../framework/Lists/GenericList.c:173:21:ListRemoveHead	24	static
+../framework/Lists/GenericList.c:217:21:ListGetHead	16	static
+../framework/Lists/GenericList.c:237:21:ListGetNext	16	static
+../framework/Lists/GenericList.c:257:21:ListGetPrev	16	static
+../framework/Lists/GenericList.c:277:14:ListRemoveElement	16	static
+../framework/Lists/GenericList.c:327:14:ListAddPrevElement	16	static
+../framework/Lists/GenericList.c:373:10:ListGetSize	16	static
+../framework/Lists/GenericList.c:392:10:ListGetAvailable	16	static
+../framework/Lists/GenericList.c:556:14:ListTest	8	static

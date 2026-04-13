@@ -1,0 +1,7 @@
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:113:6:fsciRegisterMac	16	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:165:6:fsciRegisterMacToHost	16	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:203:6:MAC_Monitor	24	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:2481:14:fsciGetMacInstanceId	24	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:2513:10:fsciGetMacInterfaceId	16	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:2537:14:fsciHostGetMacInstanceId	16	static
+../ieee_802.15.4/mac/source/App/FsciMacCommands.c:2568:10:fsciHostGetMacInterfaceId	16	static

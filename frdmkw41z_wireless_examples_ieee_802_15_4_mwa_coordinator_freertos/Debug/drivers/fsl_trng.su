@@ -1,0 +1,11 @@
+../drivers/fsl_clock.h:580:20:CLOCK_EnableClock	24	static
+../drivers/fsl_clock.h:591:20:CLOCK_DisableClock	24	static
+../drivers/fsl_trng.c:1215:17:trng_GetInstance	24	static
+../drivers/fsl_trng.c:1239:10:TRNG_GetDefaultConfig	24	static
+../drivers/fsl_trng.c:1293:17:trng_SetRetryCount	24	static
+../drivers/fsl_trng.c:1316:17:trng_SetStatisticalCheckLimit	32	static
+../drivers/fsl_trng.c:1452:17:trng_ApplyUserConfig	24	static
+../drivers/fsl_trng.c:1495:17:trng_ReadEntropy	24	static
+../drivers/fsl_trng.c:1515:10:TRNG_Init	24	static
+../drivers/fsl_trng.c:1559:6:TRNG_Deinit	16	static
+../drivers/fsl_trng.c:1584:10:TRNG_GetRandomData	56	static

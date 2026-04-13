@@ -1,0 +1,2 @@
+../framework/Panic/Source/Panic.c:47:6:panic	24	static
+../framework/Panic/Source/Panic.c:76:28:__assertion_failed	16	static

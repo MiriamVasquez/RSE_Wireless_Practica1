@@ -1,0 +1,253 @@
+/*!
+* Copyright 2016-2017 NXP
+* MyWirelessApp - Hardcoded Connection (No Scan)
+*/
+
+#include "mwa_end_device.h"
+#include "LED.h"
+#include "Keyboard.h"
+#include "SecLib.h"
+#include "SerialManager.h"
+#include "RNG_Interface.h"
+#include "Panic.h"
+#include "MemManager.h"
+#include "TimersManager.h"
+#include "FunctionLib.h"
+
+#if mEnterLowPowerWhenIdle_c
+  #include "PWR_Interface.h"
+#endif
+
+#if gNvmTestActive_d
+  #include "NVM_Interface.h"
+#endif
+
+#include "PhyInterface.h"
+#include "MacInterface.h"
+#include "board.h"
+#include "fsl_os_abstraction.h"
+
+/************************************************************************************
+* Private macros
+************************************************************************************/
+#define mMaxKeysToReceive_c 32
+#define mAppStackSize_c 700
+#define mAppTaskPrio_c  4
+
+/* --- CONFIGURACIÓN HARDCODEADA DEL PAN ID Y CANAL --- */
+#define mDefaultPanId_c           0x1234       // <--- Cambia tu PAN ID aquí
+#define mDefaultLogicalChannel_c  0x0B         // <--- Canal 11 (0x0B) hasta 26 (0x1A)
+#define mDefaultCoordShortAddr_c  0x0000       // Dirección corta del coordinador
+/* ---------------------------------------------------- */
+
+#if gNvmTestActive_d
+  #define mCoordInfo_ID_c          0x0010
+  #define maMyAddress_ID_c         0x0011
+  #define mAddrMode_ID_c           0x0012
+#endif
+
+/************************************************************************************
+* Private prototypes
+************************************************************************************/
+static void    UartRxCallBack(void*);
+static uint8_t App_WaitMsg(nwkMessage_t *pMsg, uint8_t msgType);
+static uint8_t App_SendAssociateRequest(void);
+static uint8_t App_HandleAssociateConfirm(nwkMessage_t *pMsg);
+static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg);
+static void    App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn);
+static void    App_TransmitUartData(void);
+static void    AppPollWaitTimeout(void *);
+static void    App_HandleKeys( key_event_t events );
+
+void App_init( void );
+void AppThread (osaTaskParam_t argument);
+void App_Idle_Task(uint32_t argument);
+resultType_t MLME_NWK_SapHandler (nwkMessage_t* pMsg, instanceId_t instanceId);
+resultType_t MCPS_NWK_SapHandler (mcpsToNwkMessage_t* pMsg, instanceId_t instanceId);
+extern void Mac_SetExtendedAddress(uint8_t *pAddr, instanceId_t instanceId);
+
+/************************************************************************************
+* Private memory declarations
+************************************************************************************/
+OSA_TASK_DEFINE( AppThread, mAppTaskPrio_c, 1, mAppStackSize_c, FALSE );
+
+static panDescriptor_t mCoordInfo;
+static uint8_t maMyAddress[8];
+static addrModeType_t mAddrMode;
+static nwkToMcpsMessage_t *mpPacket;
+static uint8_t mMsduHandle;
+static uint8_t mcPendingPackets;
+static bool_t mWaitPollConfirm;
+static uint16_t mPollInterval;
+static anchor_t mMlmeNwkInputQueue;
+static anchor_t mMcpsNwkInputQueue;
+static tmrTimerID_t mTimer_c = gTmrInvalidTimerID_c;
+static const uint64_t mExtendedAddress  = mMacExtendedAddress_c;
+static instanceId_t   macInstance;
+static uint8_t        interfaceId;
+osaEventId_t          mAppEvent;
+osaTaskId_t           mAppTaskHandler;
+uint8_t               gState;
+
+#if gNvmTestActive_d
+static uint16_t timeoutCounter = 0;
+NVM_RegisterDataSet(&mCoordInfo, 1, sizeof(panDescriptor_t), mCoordInfo_ID_c, gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(&maMyAddress, 1, 8, maMyAddress_ID_c, gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(&mAddrMode, 1, sizeof(addrModeType_t), mAddrMode_ID_c, gNVM_MirroredInRam_c);
+#endif
+
+/************************************************************************************
+* Public functions
+************************************************************************************/
+void main_task(uint32_t param)
+{
+    static uint8_t initialized = FALSE;
+    if( !initialized )
+    {
+        initialized = TRUE;  
+        hardware_init();
+        MEM_Init();
+        TMR_Init();
+        LED_Init();
+        SecLib_Init();
+        SerialManager_Init();
+        Phy_Init();
+        RNG_Init();
+        MAC_Init();
+#if mEnterLowPowerWhenIdle_c
+        PWR_Init();
+        PWR_DisallowDeviceToSleep();
+#endif
+#if gNvmTestActive_d
+        NvModuleInit();
+#endif
+        macInstance = BindToMAC( (instanceId_t)0 );
+        Mac_RegisterSapHandlers( MCPS_NWK_SapHandler, MLME_NWK_SapHandler, macInstance );
+        App_init();
+        mAppTaskHandler = OSA_TaskCreate(OSA_TASK(AppThread), NULL);
+        if( NULL == mAppTaskHandler ) { panic(0,0,0,0); return; }
+    }
+    App_Idle_Task( param );
+}
+
+void App_init( void )
+{
+    mAppEvent = OSA_EventCreate(TRUE);
+    gState = stateInit;
+    mcPendingPackets = 0;
+    mWaitPollConfirm = FALSE;    
+    mPollInterval = mDefaultValueOfPollIntervalSlow_c;
+    
+    /* Setteo de dirección extendida */
+    Mac_SetExtendedAddress( (uint8_t*)&mExtendedAddress, macInstance );
+    
+    /* --- INICIALIZACIÓN DE PARÁMETROS FIJOS --- */
+    FLib_MemSet(&mCoordInfo, 0, sizeof(panDescriptor_t));
+    mCoordInfo.coordPanId = mDefaultPanId_c;
+    mCoordInfo.logicalChannel = mDefaultLogicalChannel_c;
+    mCoordInfo.coordAddrMode = gAddrModeShortAddress_c;
+    mCoordInfo.coordAddress= mDefaultCoordShortAddr_c;
+    /* ------------------------------------------ */
+
+    mTimer_c = TMR_AllocateTimer();
+    KBD_Init(App_HandleKeys);
+    Serial_InitInterface(&interfaceId, APP_SERIAL_INTERFACE_TYPE, APP_SERIAL_INTERFACE_INSTANCE);
+    Serial_SetBaudRate(interfaceId, gUARTBaudRate115200_c);
+    Serial_SetRxCallBack(interfaceId, UartRxCallBack, NULL);
+    MSG_InitQueue(&mMlmeNwkInputQueue); 
+    MSG_InitQueue(&mMcpsNwkInputQueue);
+    LED_StartSerialFlash(LED1);
+
+    Serial_Print(interfaceId, "\n\rModo Hardcoded: PAN ID 0x", gAllowToBlock_d);
+    Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.coordPanId, 2, 0);
+    Serial_Print(interfaceId, " activado.\n\r", gAllowToBlock_d);
+}
+
+void AppThread(osaTaskParam_t argument)
+{ 
+    osaEventFlags_t ev;
+    void *pMsgIn = NULL;
+    uint8_t rc;
+    
+    while(1)
+    {
+        OSA_EventWait(mAppEvent, osaEventFlagsAll_c, FALSE, osaWaitForever_c, &ev);
+        if( !gUseRtos_c && !ev) break;
+        pMsgIn = NULL;
+
+        if( ev & gAppEvtMessageFromMLME_c )
+        {
+            pMsgIn = MSG_DeQueue(&mMlmeNwkInputQueue);
+            if (pMsgIn) {
+                rc = App_WaitMsg(pMsgIn, gMlmeBeaconNotifyInd_c);
+                if(rc == errorNoError) {
+                    MSG_Free(((nwkMessage_t *)pMsgIn)->msgData.beaconNotifyInd.pBufferRoot);
+                }
+            }
+        }
+        
+        switch(gState)
+        {
+        case stateInit:
+            Serial_Print(interfaceId, "Saltando escaneo... Intentando asociar directamente.\n\r", gAllowToBlock_d);
+            /* Salto directo al estado de asociación */
+            gState = stateAssociate;
+            OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
+            break;
+            
+        case stateAssociate:
+            Serial_Print(interfaceId, "Enviando Associate Request a PAN 0x", gAllowToBlock_d);
+            Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.coordPanId, 2, 0);
+            Serial_Print(interfaceId, " en canal 0x", gAllowToBlock_d);
+            Serial_PrintHex(interfaceId, &mCoordInfo.logicalChannel, 1, gPrtHexNewLine_c);
+            
+            rc = App_SendAssociateRequest();
+            if(rc == errorNoError) gState = stateAssociateWaitConfirm;
+            break; 
+            
+        case stateAssociateWaitConfirm:
+            if (ev & gAppEvtMessageFromMLME_c && pMsgIn)
+            {
+                rc = App_WaitMsg(pMsgIn, gMlmeAssociateCnf_c);
+                if(rc == errorNoError)
+                {
+                    rc = App_HandleAssociateConfirm(pMsgIn);
+                    if (rc == errorNoError)
+                    {
+                        Serial_Print(interfaceId, "Conectado exitosamente.\n\r", gAllowToBlock_d);
+                        TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c ,mPollInterval, AppPollWaitTimeout, NULL );
+                        gState = stateListen;
+                    }
+                    else
+                    {
+                        Serial_Print(interfaceId, "Error en asociación. Reintentando en 2 seg...\n\r", gAllowToBlock_d);
+                        gState = stateInit; // Vuelve a intentar
+                        OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
+                    }
+                }
+            }
+            break; 
+
+        case stateListen:
+            if (ev & gAppEvtMessageFromMLME_c && pMsgIn) rc = App_HandleMlmeInput(pMsgIn);
+            if (ev & gAppEvtRxFromUart_c) App_TransmitUartData();
+            break;
+        }
+
+        if (pMsgIn) { MSG_Free(pMsgIn); pMsgIn = NULL; }
+
+        if (ev & gAppEvtMessageFromMCPS_c)
+        {      
+            pMsgIn = MSG_DeQueue(&mMcpsNwkInputQueue);
+            if (pMsgIn) {
+                App_HandleMcpsInput(pMsgIn);
+                MSG_Free(pMsgIn);
+                pMsgIn = NULL;
+            }
+        }
+        
+        if( MSG_Pending(&mMcpsNwkInputQueue) ) OSA_EventSet(mAppEvent, gAppEvtMessageFromMCPS_c);
+        if( MSG_Pending(&mMlmeNwkInputQueue) ) OSA_EventSet(mAppEvent, gAppEvtMessageFromMLME_c);
+        if( !gUseRtos_c ) break;
+    }
+}

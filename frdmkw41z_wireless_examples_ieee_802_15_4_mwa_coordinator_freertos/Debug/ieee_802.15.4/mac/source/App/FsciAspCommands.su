@@ -1,0 +1,4 @@
+../ieee_802.15.4/mac/source/App/FsciAspCommands.c:114:6:fsciRegisterAsp	16	static
+../ieee_802.15.4/mac/source/App/FsciAspCommands.c:152:6:fsciRegisterAspToHost	16	static
+../ieee_802.15.4/mac/source/App/FsciAspCommands.c:261:6:AspSapMonitor	24	static
+../ieee_802.15.4/mac/source/App/FsciAspCommands.c:414:10:fsciGetAspInterfaceId	16	static

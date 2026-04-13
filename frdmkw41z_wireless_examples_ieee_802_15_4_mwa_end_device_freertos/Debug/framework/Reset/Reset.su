@@ -1,0 +1,2 @@
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_end_device_freertos\CMSIS/core_cm0plus.h:846:22:NVIC_SystemReset	8	static
+../framework/Reset/Reset.c:39:6:ResetMCU	8	static

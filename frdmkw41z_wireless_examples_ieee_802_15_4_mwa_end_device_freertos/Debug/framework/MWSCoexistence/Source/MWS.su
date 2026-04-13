@@ -1,0 +1,16 @@
+../framework/MWSCoexistence/Source/MWS.c:216:13:MWS_Register	24	static
+../framework/MWSCoexistence/Source/MWS.c:258:10:MWS_GetInactivityDuration	24	static
+../framework/MWSCoexistence/Source/MWS.c:289:13:MWS_Acquire	24	static
+../framework/MWSCoexistence/Source/MWS.c:340:13:MWS_Release	24	static
+../framework/MWSCoexistence/Source/MWS.c:380:13:MWS_Abort	16	static
+../framework/MWSCoexistence/Source/MWS.c:404:16:MWS_GetActiveProtocol	8	static
+../framework/MWSCoexistence/Source/MWS.c:422:13:MWS_SignalIdle	24	static
+../framework/MWSCoexistence/Source/MWS.c:461:13:MWS_CoexistenceInit	32	static
+../framework/MWSCoexistence/Source/MWS.c:519:6:MWS_CoexistenceEnable	8	static
+../framework/MWSCoexistence/Source/MWS.c:532:6:MWS_CoexistenceDisable	8	static
+../framework/MWSCoexistence/Source/MWS.c:553:13:MWS_CoexistenceRegister	24	static
+../framework/MWSCoexistence/Source/MWS.c:596:9:MWS_CoexistenceDenyState	16	static
+../framework/MWSCoexistence/Source/MWS.c:618:6:MWS_CoexistenceSetPriority	16	static
+../framework/MWSCoexistence/Source/MWS.c:653:13:MWS_CoexistenceRequestAccess	24	static
+../framework/MWSCoexistence/Source/MWS.c:745:13:MWS_CoexistenceChangeAccess	24	static
+../framework/MWSCoexistence/Source/MWS.c:784:6:MWS_CoexistenceReleaseAccess	8	static
