@@ -54,7 +54,7 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos
+BUILD_ARTIFACT_NAME := mwa_coordinator_freertos
 BUILD_ARTIFACT_EXTENSION := axf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
@@ -66,24 +66,24 @@ all:
 	+@$(MAKE) --no-print-directory main-build && $(MAKE) --no-print-directory post-build
 
 # Main-build Target
-main-build: frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf
+main-build: mwa_coordinator_freertos.axf
 
 # Tool invocations
-frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
+mwa_coordinator_freertos.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -L"C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\libs" -Xlinker -Map="frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T MKW41Z512xxx4_connectivity.ld -L ../source -o "frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf" $(OBJS) $(USER_OBJS) $(LIBS) -lm -lc -lgcc -lnosys -l_crypto_m0 -l802.15.4_mac_06_cm0
+	arm-none-eabi-gcc -L"C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\libs" -Xlinker -Map="mwa_coordinator_freertos.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T MKW41Z512xxx4_connectivity.ld -L ../source -o "mwa_coordinator_freertos.axf" $(OBJS) $(USER_OBJS) $(LIBS) -lm -lc -lgcc -lnosys -l_crypto_m0 -l802.15.4_mac_06_cm0
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf
+	-$(RM) mwa_coordinator_freertos.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf"; # arm-none-eabi-objcopy -v -O binary "frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.axf" "frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.bin" ; # checksum -p MKW41Z512xxx4 -d "frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos.bin";
+	-arm-none-eabi-size "mwa_coordinator_freertos.axf"; # arm-none-eabi-objcopy -v -O binary "mwa_coordinator_freertos.axf" "mwa_coordinator_freertos.bin" ; # checksum -p MKW41Z512xxx4 -d "mwa_coordinator_freertos.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents main-build post-build

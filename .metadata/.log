@@ -520,3 +520,43 @@ org.eclipse.core.runtime.CoreException: Project: mwa_end_device_freertos is clos
 
 !ENTRY org.eclipse.cdt.core 1 0 2026-04-12 22:53:49.260
 !MESSAGE Indexed 'mwa_coordinator_freertos' (0 sources, 0 headers) in 0 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+!SESSION 2026-04-13 19:19:18.175 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=17.0.9
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY org.eclipse.core.resources 2 10035 2026-04-13 19:21:16.452
+!MESSAGE The workspace exited with unsaved changes in the previous session; refreshing workspace to recover changes.
+
+!ENTRY org.eclipse.egit.ui 2 0 2026-04-13 19:21:51.059
+!MESSAGE Warning: The environment variable HOME is not set. The following directory will be used to store the Git
+user global configuration and to define the default location to store repositories: 'C:\Users\Miriam'. If this is
+not correct please set the HOME environment variable and restart Eclipse. Otherwise Git for Windows and
+EGit might behave differently since they see different configuration options.
+This warning can be switched off on the Team > Git > Confirmations and Warnings preference page.
+
+!ENTRY com.crt.utils 1 0 2026-04-13 22:35:19.733
+!MESSAGE Connected to 127.0.0.1 on port 2332.
+
+!ENTRY com.nxp.mcuxpresso.core.debug 1 0 2026-04-13 22:35:20.227
+!MESSAGE Telnet session connected on port 2333->51944 @ 127.0.0.1
+
+!ENTRY com.crt.utils 1 0 2026-04-13 22:39:50.786
+!MESSAGE Connected to 127.0.0.1 on port 2334.
+
+!ENTRY com.nxp.mcuxpresso.core.debug 1 0 2026-04-13 22:39:51.523
+!MESSAGE Telnet session connected on port 2335->52615 @ 127.0.0.1
+
+!ENTRY com.crt.utils 1 0 2026-04-13 22:56:59.040
+!MESSAGE Connected to 127.0.0.1 on port 2332.
+
+!ENTRY com.nxp.mcuxpresso.core.debug 1 0 2026-04-13 22:56:59.765
+!MESSAGE Telnet session connected on port 2333->61317 @ 127.0.0.1
+
+!ENTRY com.crt.utils 1 0 2026-04-13 23:08:42.338
+!MESSAGE Connected to 127.0.0.1 on port 2332.
+
+!ENTRY com.nxp.mcuxpresso.core.debug 1 0 2026-04-13 23:08:43.063
+!MESSAGE Telnet session connected on port 2333->62792 @ 127.0.0.1

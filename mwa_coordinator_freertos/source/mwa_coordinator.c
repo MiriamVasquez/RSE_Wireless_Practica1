@@ -37,27 +37,10 @@
 #include "board.h"
 #include "fsl_os_abstraction.h"
 
-/************************************************************************************
-*************************************************************************************
-* Private macros
-*************************************************************************************
-************************************************************************************/
-
-/* If there are too many pending packets to be send over the air, */
-/* receive mMaxKeysToReceive_c chars. */
-/* The chars will be send over the air when there are no pending packets*/
 #define mMaxKeysToReceive_c 32
 
-/************************************************************************************
-*************************************************************************************
-* Private prototypes
-*************************************************************************************
-************************************************************************************/
 
-/* Forward declarations of helper functions */
 static void    UartRxCallBack(void*);
-static uint8_t App_StartScan(macScanType_t scanType, uint8_t appInstance);
-static void    App_HandleScanEdConfirm(nwkMessage_t *pMsg);
 static uint8_t App_StartCoordinator( uint8_t appInstance );
 static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg, uint8_t appInstance);
 static uint8_t App_SendAssociateResponse(nwkMessage_t *pMsgIn, uint8_t appInstance);
@@ -72,18 +55,6 @@ resultType_t MLME_NWK_SapHandler (nwkMessage_t* pMsg, instanceId_t instanceId);
 resultType_t MCPS_NWK_SapHandler (mcpsToNwkMessage_t* pMsg, instanceId_t instanceId);
 extern void Mac_SetExtendedAddress(uint8_t *pAddr, instanceId_t instanceId);
 
-/************************************************************************************
-*************************************************************************************
-* Private type definitions
-*************************************************************************************
-************************************************************************************/
-
-
-/************************************************************************************
-*************************************************************************************
-* Private memory declarations
-*************************************************************************************
-************************************************************************************/
 /* The short address and PAN ID of the coordinator*/
 static const uint16_t mShortAddress = mDefaultValueOfShortAddress_c;
 static const uint16_t mPanId = mDefaultValueOfPanId_c;
@@ -114,36 +85,8 @@ static instanceId_t   macInstance;
 static uint8_t        interfaceId;
 osaEventId_t          mAppEvent;
 
-/************************************************************************************
-*************************************************************************************
-* Public memory declarations
-*************************************************************************************
-************************************************************************************/
-
-/* The current state of the applications state machine */
 uint8_t gState;
 
-/************************************************************************************
-*************************************************************************************
-* Public functions
-*************************************************************************************
-************************************************************************************/
-
-/*! *********************************************************************************
-* \brief  This is the first task created by the OS. This task will initialize 
-*         the system
-*
-* \param[in]  argument
-*
-* \return  None.
-*
-* \pre
-*
-* \post
-*
-* \remarks
-*
-********************************************************************************** */
 void main_task(uint32_t param)
 {
     static uint8_t initialized = FALSE;
@@ -172,17 +115,6 @@ void main_task(uint32_t param)
     AppThread( param );
 }
 
-/*****************************************************************************
-* Initialization function for the App Task. This is called during
-* initialization and should contain any application specific initialization
-* (ie. hardware initialization/setup, table initialization, power up
-* notification.
-*
-* Interface assumptions: None
-*
-* Return value: None
-*
-*****************************************************************************/
 void App_init( void )
 {
     mAppEvent = OSA_EventCreate(TRUE);
@@ -232,26 +164,20 @@ void AppThread(uint32_t argument)
     while(1)
     {
         OSA_EventWait(mAppEvent, osaEventFlagsAll_c, FALSE, osaWaitForever_c, &ev);
-
-        if( !gUseRtos_c && !ev)
-        {
+        if( !gUseRtos_c && !ev){
             break;
         }
-
         pMsgIn = NULL;
 
         /* Dequeue the MLME message */
-        if( ev & gAppEvtMessageFromMLME_c )
-        {
+        if( ev & gAppEvtMessageFromMLME_c ){
             /* Get the message from MLME */
             pMsgIn = MSG_DeQueue(&mMlmeNwkInputQueue);
-            
+
             /* Any time a beacon might arrive. Always handle the beacon frame first */
-            if (pMsgIn)
-            {               
+            if (pMsgIn){
                 ret = App_WaitMsg(pMsgIn, gMlmeBeaconNotifyInd_c);
-                if(ret == errorNoError)
-                {
+                if(ret == errorNoError){
                     /* ALWAYS free the beacon frame contained in the beacon notify indication.*/
                     /* ALSO the application can use the beacon payload.*/
                     MSG_Free(((nwkMessage_t *)pMsgIn)->msgData.beaconNotifyInd.pBufferRoot);
@@ -261,8 +187,8 @@ void AppThread(uint32_t argument)
         }
         
         /* The application state machine */
-        switch(gState)
-        {
+        switch(gState){
+
         case stateInit:
         	Serial_Print(interfaceId,"\n\r=================================================\n\r", gAllowToBlock_d);
         	Serial_Print(interfaceId," Coordinador: PAN_ID 5555 CHANNEL 15 \n\r", gAllowToBlock_d);
@@ -278,16 +204,14 @@ void AppThread(uint32_t argument)
         	break;
 
       case stateStartCoordinator:
-          if (ev & gAppEvtStartCoordinator_c)
-          {
+          if (ev & gAppEvtStartCoordinator_c){
               /* Start up as a PAN Coordinator on the selected channel. */
               Serial_Print(interfaceId,"\n\rStarting as PAN coordinator on channel 0x", gAllowToBlock_d);
               Serial_PrintHex(interfaceId,&mLogicalChannel, 1, gPrtHexNoFormat_c);
               Serial_Print(interfaceId,".\n\r", gAllowToBlock_d);
 
               ret = App_StartCoordinator(0);
-              if(ret == errorNoError)
-              {
+              if(ret == errorNoError){
                   /* If the Start request was sent successfully to
                   the MLME, then goto Wait for confirm state. */
                   gState = stateStartCoordinatorWaitConfirm;
@@ -298,13 +222,10 @@ void AppThread(uint32_t argument)
       case stateStartCoordinatorWaitConfirm:
           /* Stay in this state until the Start confirm message
           arrives, and then goto the Listen state. */
-          if (ev & gAppEvtMessageFromMLME_c)
-          {
-              if (pMsgIn)
-              {        
+          if (ev & gAppEvtMessageFromMLME_c){
+              if (pMsgIn){
                   ret = App_WaitMsg(pMsgIn, gMlmeStartCnf_c);
-                  if(ret == errorNoError)
-                  {
+                  if(ret == errorNoError){
                       Serial_Print(interfaceId,"Started the coordinator with PAN ID 0x", gAllowToBlock_d);
                       Serial_PrintHex(interfaceId,(uint8_t *)&mPanId, 2, gPrtHexNoFormat_c);
                       Serial_Print(interfaceId,", and short address 0x", gAllowToBlock_d);
@@ -321,38 +242,32 @@ void AppThread(uint32_t argument)
       case stateListen:
           /* Stay in this state forever. 
           Transmit the data received on UART */
-          if (ev & gAppEvtMessageFromMLME_c)
-          {
+          if (ev & gAppEvtMessageFromMLME_c){
               /* Get the message from MLME */
-              if (pMsgIn)
-              {      
+              if (pMsgIn){
                   /* Process it */
                   ret = App_HandleMlmeInput(pMsgIn, 0);
                   /* Messages from the MLME must always be freed. */
               }
           }
           
-          if (ev & gAppEvtRxFromUart_c)
-          {      
+          if (ev & gAppEvtRxFromUart_c){
               /* get byte from UART */
               App_TransmitUartData();
           }
           break;
       }/* switch(gState) */
       
-      if (pMsgIn)
-      {
+      if (pMsgIn){
           /* Messages must always be freed. */ 
           MSG_Free(pMsgIn);
           pMsgIn = NULL;
       }
       
-      if (ev & gAppEvtMessageFromMCPS_c)
-      {      
+      if (ev & gAppEvtMessageFromMCPS_c){
           /* Get the message from MCPS */
           pMsgIn = MSG_DeQueue(&mMcpsNwkInputQueue);
-          if (pMsgIn)
-          {
+          if (pMsgIn){
               /* Process it */
               App_HandleMcpsInput(pMsgIn, 0);
               /* Messages from the MCPS must always be freed. */
@@ -367,213 +282,31 @@ void AppThread(uint32_t argument)
       if( MSG_Pending(&mMlmeNwkInputQueue) )
           OSA_EventSet(mAppEvent, gAppEvtMessageFromMLME_c);
 
-      if( !gUseRtos_c )
-      {
+      if( !gUseRtos_c ){
           break;
       }
   }/* while(1) */
 }
 
-
-
-/************************************************************************************
-*************************************************************************************
-* Private functions
-*************************************************************************************
-************************************************************************************/
-
-/*****************************************************************************
-* UartRxCallBack
-*
-* This callback is triggered when a new byte is received over the UART
-*
-*****************************************************************************/
-static void UartRxCallBack(void *pData) 
-{
+static void UartRxCallBack(void *pData) {
     uint8_t pressedKey;
     uint16_t count;
     
-    if( stateListen == gState )
-    {
+    if( stateListen == gState ){
         OSA_EventSet(mAppEvent, gAppEvtRxFromUart_c);
         return;
     }
     
-    if( gState == stateInit )
-    {
+    if( gState == stateInit ){
         LED_StopFlashingAllLeds();
         OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
     }
 
-    do
-    {
+    do{
         Serial_GetByteFromRxBuffer(interfaceId, &pressedKey, &count);
     }while(count);
 }
-//
-///******************************************************************************
-//* The App_StartScan(scanType) function will start the scan process of the
-//* specified type in the MAC. This is accomplished by allocating a MAC message,
-//* which is then assigned the desired scan parameters and sent to the MLME
-//* service access point.
-//* The function may return either of the following values:
-//*   errorNoError:          The Scan message was sent successfully.
-//*   errorInvalidParameter: The MLME service access point rejected the
-//*                          message due to an invalid parameter.
-//*   errorAllocFailed:      A message buffer could not be allocated.
-//*
-//******************************************************************************/
-//static uint8_t App_StartScan(macScanType_t scanType, uint8_t appInstance)
-//{
-//  mlmeMessage_t *pMsg;
-//  mlmeScanReq_t *pScanReq;
-//
-//  Serial_Print(interfaceId,"Sending the MLME-Scan Request message to the MAC...", gAllowToBlock_d);
-//
-//  /* Allocate a message for the MLME (We should check for NULL). */
-//  pMsg = MSG_AllocType(mlmeMessage_t);
-//  if(pMsg != NULL)
-//  {
-//    /* This is a MLME-SCAN.req command */
-//    pMsg->msgType = gMlmeScanReq_c;
-//    /* Create the Scan request message data. */
-//    pScanReq = &pMsg->msgData.scanReq;
-//    /* gScanModeED_c, gScanModeActive_c, gScanModePassive_c, or gScanModeOrphan_c */
-//    pScanReq->scanType = scanType;
-//    /* ChannelsToScan */
-//#ifdef gPHY_802_15_4g_d
-//    pScanReq->channelPage = gChannelPageId9_c;
-//    pScanReq->scanChannels[0] = mDefaultValueOfChannel_c;
-//    FLib_MemSet(pScanReq->scanChannels+1, 0, sizeof(channelMask_t)-sizeof(uint32_t));
-//#else
-//    pScanReq->scanChannels = mDefaultValueOfChannel_c;
-//#endif
-//
-//    /* Duration per channel 0-14 (dc). T[sec] = (16*960*((2^dc)+1))/1000000.
-//       A scan duration of 3 on 16 channels approximately takes 2 secs. */
-//    pScanReq->scanDuration = 3;
-//    /* Don't use security */
-//    pScanReq->securityLevel = gMacSecurityNone_c;
-//
-//    /* Send the Scan request to the MLME. */
-//    if( NWK_MLME_SapHandler( pMsg, macInstance ) == gSuccess_c )
-//    {
-//      Serial_Print(interfaceId,"Done\n\r", gAllowToBlock_d);
-//      return errorNoError;
-//    }
-//    else
-//    {
-//      Serial_Print(interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d);
-//      return errorInvalidParameter;
-//    }
-//  }
-//  else
-//  {
-//    /* Allocation of a message buffer failed. */
-//    Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
-//    return errorAllocFailed;
-//  }
-//}
-//
-//
-///******************************************************************************
-//* The App_HandleScanEdConfirm(nwkMessage_t *pMsg) function will handle the
-//* ED scan confirm message received from the MLME when the ED scan has completed.
-//* The message contains the ED scan result list. This function will search the
-//* list in order to select the logical channel with the least energy. The
-//* selected channel is stored in the global variable called 'maLogicalChannel'.
-//*
-//******************************************************************************/
-//static void App_HandleScanEdConfirm(nwkMessage_t *pMsg)
-//{
-//  uint8_t n, minEnergy;
-//  uint8_t *pEdList;
-//  uint32_t chMask = mDefaultValueOfChannel_c;
-//  uint8_t idx;
-//#ifndef gPHY_802_15_4g_d
-//  uint8_t Channel;
-//#endif
-//
-//  Serial_Print(interfaceId,"Received the MLME-Scan Confirm message from the MAC\n\r", gAllowToBlock_d);
-//
-//  /* Get a pointer to the energy detect results */
-//  pEdList = pMsg->msgData.scanCnf.resList.pEnergyDetectList;
-//
-//  /* Set the minimum energy to a large value */
-//  minEnergy = 0xFF;
-//
-//#ifdef gPHY_802_15_4g_d
-//      /* Select default channel */
-//      mLogicalChannel = 0;
-//
-//      /* Search for the channel with least energy */
-//      for(idx=0, n=0; n<mDefaultMaxChannel_c; n++)
-//      {
-//          if( (chMask & (1 << n)) )
-//          {
-//              if( pEdList[idx] < minEnergy )
-//              {
-//                  minEnergy = pEdList[idx];
-//                  mLogicalChannel = n;
-//              }
-//              idx++;
-//          }
-//      }
-//#else
-//  /* Select default channel */
-//  mLogicalChannel = 11;
-//
-//  /* Search for the channel with least energy */
-//  for(idx=0, n=0; n<16; n++)
-//  {
-//      /* Channel numbering is 11 to 26 both inclusive */
-//      Channel = n + 11;
-//      if( (chMask & (1 << Channel)) )
-//      {
-//          if( pEdList[idx] < minEnergy )
-//          {
-//              minEnergy = pEdList[idx];
-//              mLogicalChannel = Channel;
-//          }
-//          idx++;
-//      }
-//  }
-//#endif /* gPHY_802_15_4g_d */
-//
-//  chMask &= ~(1 << mLogicalChannel);
-//
-//  /* Print out the result of the ED scan */
-//  Serial_Print(interfaceId,"ED scan returned the following results:\n\r  [", gAllowToBlock_d);
-//#ifdef gPHY_802_15_4g_d
-//  Serial_PrintHex(interfaceId,pEdList, mDefaultMaxChannel_c, gPrtHexBigEndian_c | gPrtHexSpaces_c);
-//#else
-//  Serial_PrintHex(interfaceId,pEdList, 16, gPrtHexBigEndian_c | gPrtHexSpaces_c);
-//#endif /* gPHY_802_15_4g_d */
-//  Serial_Print(interfaceId,"]\n\r\n\r", gAllowToBlock_d);
-//
-//  /* Print out the selected logical channel */
-//  Serial_Print(interfaceId,"Based on the ED scan the logical channel 0x", gAllowToBlock_d);
-//  Serial_PrintHex(interfaceId,&mLogicalChannel, 1, gPrtHexNoFormat_c);
-//  Serial_Print(interfaceId," was selected\n\r", gAllowToBlock_d);
-//
-//  /* The list of detected energies must be freed. */
-//  MSG_Free(pEdList);
-//}
-//
-///******************************************************************************
-//* The App_StartScan(scanType) function will start the scan process of the
-//* specified type in the MAC. This is accomplished by allocating a MAC message,
-//* which is then assigned the desired scan parameters and sent to the MLME
-//* service access point. The MAC PIB attributes "macShortAddress", and
-//* "macAssociatePermit" are modified.
-//*
-//* The function may return either of the following values:
-//*   errorNoError:          The Scan message was sent successfully.
-//*   errorInvalidParameter: The MLME service access point rejected the
-//*                          message due to an invalid parameter.
-//*   errorAllocFailed:      A message buffer could not be allocated.
-//*
-//******************************************************************************/
+
 static uint8_t App_StartCoordinator( uint8_t appInstance )
 {
   /* Message for the MLME will be allocated and attached to this pointer */
@@ -643,15 +376,13 @@ static uint8_t App_StartCoordinator( uint8_t appInstance )
     pStartReq->beaconSecurityLevel       = gMacSecurityNone_c;
 
     /* Send the Start request to the MLME. */
-    if(NWK_MLME_SapHandler( pMsg, macInstance ) != gSuccess_c)
-    {
+    if(NWK_MLME_SapHandler( pMsg, macInstance ) != gSuccess_c){
       /* One or more parameters in the Start Request message were invalid. */
       Serial_Print(interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d);
       return errorInvalidParameter;
     }
   }
-  else
-  {
+  else{
     /* Allocation of a message buffer failed. */
     Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
     return errorAllocFailed;
@@ -780,8 +511,7 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg, uint8_t appInstance)
 ******************************************************************************/
 static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
 {
-  switch(pMsgIn->msgType)
-  {
+  switch(pMsgIn->msgType){
     /* The MCPS-Data confirm is sent by the MAC to the network
        or application layer when data has been sent. */
   case gMcpsDataCnf_c:
@@ -790,14 +520,65 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
     break;
 
   case gMcpsDataInd_c:
-    /* The MCPS-Data indication is sent by the MAC to the network
-       or application layer when data has been received. We simply
-       copy the received data to the UART. */
-    Serial_SyncWrite( interfaceId,pMsgIn->msgData.dataInd.pMsdu, pMsgIn->msgData.dataInd.msduLength );
-    break;
-    
+    /* 1. Extraer la información del paquete recibido */
+    uint8_t payloadSize = pMsgIn->msgData.dataInd.msduLength;
+    uint8_t lqi = pMsgIn->msgData.dataInd.mpduLinkQuality;
+    uint16_t srcAddress = pMsgIn->msgData.dataInd.srcAddrMode;
+    uint8_t *payload = pMsgIn->msgData.dataInd.pMsdu;
+
+    Serial_Print(interfaceId, "\n\r--- Paquete Recibido ---\n\r", gAllowToBlock_d);
+
+    Serial_Print(interfaceId, "Direccion Origen : 0x", gAllowToBlock_d);
+    Serial_PrintHex(interfaceId, (uint8_t *)&srcAddress, 2, gPrtHexBigEndian_c);
+
+    Serial_Print(interfaceId, "\n\rLQI              : ", gAllowToBlock_d);
+    Serial_PrintDec(interfaceId, (uint32_t)lqi);
+
+    Serial_Print(interfaceId, "\n\rTamano Payload   : ", gAllowToBlock_d);
+    Serial_PrintDec(interfaceId, (uint32_t)payloadSize);
+    Serial_Print(interfaceId, " bytes\n\r", gAllowToBlock_d);
+
+	// Verificamos que el paquete tenga al menos 1 byte
+	if (payloadSize > 0){
+
+		uint8_t contador = payload[0];
+
+		LED_TurnOffAllLeds();
+
+ 		Serial_Print(interfaceId, "Contador = ", gAllowToBlock_d);
+		Serial_PrintDec(interfaceId, (uint32_t)contador);
+		Serial_Print(interfaceId, " -> ", gAllowToBlock_d);
+
+		switch (contador){
+			case 0: // Magenta ( Rojo + Azul)
+				Serial_Print(interfaceId, "LED Magenta\n\r", gAllowToBlock_d);
+				LED_TurnOnLed(LED1);
+				LED_TurnOnLed(LED3);
+				break;
+
+			case 1: // Azul
+				Serial_Print(interfaceId, "LED Azul\n\r", gAllowToBlock_d);
+				LED_TurnOnLed(LED3);
+				break;
+
+			case 2: // Rojo
+				Serial_Print(interfaceId, "LED Rojo\n\r", gAllowToBlock_d);
+				LED_TurnOnLed(LED1);
+				break;
+
+			case 3: // Verde
+				Serial_Print(interfaceId, "LED Verde\n\r", gAllowToBlock_d);
+				LED_TurnOnLed(LED2);
+				break;
+
+			default:
+				Serial_Print(interfaceId, "Color desconocido\n\r", gAllowToBlock_d);
+				break;
+		}
+	}
+	break;
   default:
-    break;
+	  break;
   }
 }
 

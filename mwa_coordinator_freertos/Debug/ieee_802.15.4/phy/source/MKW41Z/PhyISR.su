@@ -1,7 +1,7 @@
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:745:22:NVIC_EnableIRQ	16	static
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:780:22:NVIC_SetPendingIRQ	16	static
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:791:22:NVIC_ClearPendingIRQ	16	static
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\CMSIS/core_cm0plus.h:804:22:NVIC_SetPriority	24	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\CMSIS/core_cm0plus.h:745:22:NVIC_EnableIRQ	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\CMSIS/core_cm0plus.h:780:22:NVIC_SetPendingIRQ	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\CMSIS/core_cm0plus.h:791:22:NVIC_ClearPendingIRQ	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\CMSIS/core_cm0plus.h:804:22:NVIC_SetPriority	24	static
 ../ieee_802.15.4/phy/source/MKW41Z/PhyISR.c:72:6:ProtectFromXcvrInterrupt	8	static
 ../ieee_802.15.4/phy/source/MKW41Z/PhyISR.c:90:6:UnprotectFromXcvrInterrupt	8	static
 ../ieee_802.15.4/phy/source/MKW41Z/PhyISR.c:113:6:PhyIsrPassRxParams	16	static

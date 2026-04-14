@@ -51,7 +51,10 @@
 ************************************************************************************/
 #define MY_PAN_ID   0x5555  // PAN ID 5555
 #define MY_CHANNEL  0x15   // Canal 15
-#define COORD_SHORT_ADDR  0x0000  // Dirección del Coordinador
+#define COORD_SHORT_ADDR  0x0000  //0000
+static uint8_t mAppCounter = 0;
+#define gAppEvtSW3Pressed_c (1 << 4)
+#define gAppEvtSW4Pressed_c (1 << 5)
 /* If there are too many pending packets to be send over the air, */
 /* receive mMaxKeysToReceive_c chars. */
 /* The chars will be send over the air when there are no pending packets*/
@@ -75,8 +78,6 @@
 ************************************************************************************/
 /* Forward declarations of helper functions */
 static void    UartRxCallBack(void*);
-static uint8_t App_StartScan(macScanType_t scanType);
-static uint8_t App_HandleScanActiveConfirm(nwkMessage_t *pMsg);
 static uint8_t App_WaitMsg(nwkMessage_t *pMsg, uint8_t msgType);
 static uint8_t App_SendAssociateRequest(void);
 static uint8_t App_HandleAssociateConfirm(nwkMessage_t *pMsg);
@@ -92,19 +93,6 @@ void App_Idle_Task(uint32_t argument);
 resultType_t MLME_NWK_SapHandler (nwkMessage_t* pMsg, instanceId_t instanceId);
 resultType_t MCPS_NWK_SapHandler (mcpsToNwkMessage_t* pMsg, instanceId_t instanceId);
 extern void Mac_SetExtendedAddress(uint8_t *pAddr, instanceId_t instanceId);
-
-/************************************************************************************
-*************************************************************************************
-* Private type definitions
-*************************************************************************************
-************************************************************************************/
-
-
-/************************************************************************************
-*************************************************************************************
-* Private memory declarations
-*************************************************************************************
-************************************************************************************/
 
 OSA_TASK_DEFINE( AppThread, mAppTaskPrio_c, 1, mAppStackSize_c, FALSE );
 
@@ -161,43 +149,12 @@ NVM_RegisterDataSet(&maMyAddress,         1,   8, maMyAddress_ID_c, gNVM_Mirrore
 NVM_RegisterDataSet(&mAddrMode,           1,   sizeof(addrModeType_t), mAddrMode_ID_c, gNVM_MirroredInRam_c);
 #endif
 
-
-/************************************************************************************
-*************************************************************************************
-* Public memory declarations
-*************************************************************************************
-************************************************************************************/
-
-/* The current state of the applications state machine */
 uint8_t gState;
 
-/************************************************************************************
-*************************************************************************************
-* Public functions
-*************************************************************************************
-************************************************************************************/
-
-/*! *********************************************************************************
-* \brief  This is the first task created by the OS. This task will initialize
-*         the system
-*
-* \param[in]  argument
-*
-* \return  None.
-*
-* \pre
-*
-* \post
-*
-* \remarks
-*
-********************************************************************************** */
-void main_task(uint32_t param)
-{
+void main_task(uint32_t param){
     static uint8_t initialized = FALSE;
 
-    if( !initialized )
-    {
+    if( !initialized ){
         initialized = TRUE;  
         hardware_init();
         MEM_Init();
@@ -235,20 +192,6 @@ void main_task(uint32_t param)
     App_Idle_Task( param );
 }
 
-/*! *********************************************************************************
-* \brief  This is the application's Idle task.
-*
-* \param[in]  argument
-*
-* \return  None.
-*
-* \pre
-*
-* \post
-*
-* \remarks
-*
-********************************************************************************** */
 void App_Idle_Task(uint32_t argument)
 {
 //#if mEnterLowPowerWhenIdle_c
@@ -262,27 +205,6 @@ void App_Idle_Task(uint32_t argument)
         NvIdle();
 #endif
 
-//#if mEnterLowPowerWhenIdle_c
-//        if( PWR_CheckIfDeviceCanGoToSleep() )
-//        {
-//            Serial_Print(interfaceId, "\n\rEntering in deep sleep mode...\n\r", gAllowToBlock_d);
-//            wakeupReason = PWR_EnterLowPower();
-//            PWR_DisallowDeviceToSleep();
-//            Led1On();
-//            Led2On();
-//            Led3On();
-//            Led4On();
-//
-//            if( wakeupReason.Bits.FromKeyBoard )
-//            {
-//                App_HandleKeys( gKBD_EventSW1_c );
-//            }
-//        }
-//        else
-//        {
-//            PWR_EnterSleep();
-//        }
-//#endif
         if( !gUseRtos_c )
         {
             break;
@@ -290,17 +212,6 @@ void App_Idle_Task(uint32_t argument)
     }
 }
 
-/*****************************************************************************
-* Initialization function for the App Task. This is called during
-* initialization and should contain any application specific initialization
-* (ie. hardware initialization/setup, table initialization, power up
-* notificaiton.
-*
-* Interface assumptions: None
-*
-* Return value: None
-*
-*****************************************************************************/
 void App_init( void )
 {
     mAppEvent = OSA_EventCreate(TRUE);
@@ -333,37 +244,62 @@ void App_init( void )
 
     /*signal app ready*/
     LED_StartSerialFlash(LED1);
-//#if mEnterLowPowerWhenIdle_c
-//    if (!PWRLib_MCU_WakeupReason.Bits.DeepSleepTimeout)
-//    {
-//#endif
-        Serial_Print(interfaceId, "\n\rPress any switch on board to start running the application.\n\r", gAllowToBlock_d);
+
+    Serial_Print(interfaceId, "\n\rPress any switch on board to start running the application.\n\r", gAllowToBlock_d);
 #if gNvmTestActive_d
         Serial_Print(interfaceId, "Long press switch_1 on board to use MAC data restore from NVM.\n\r", gAllowToBlock_d);
 #endif
-//#if mEnterLowPowerWhenIdle_c
-//    }
-//    else
-//    {
-//        Serial_Print(interfaceId, "\n\rWake up from deep sleep.\n\r", gAllowToBlock_d);
-//        if(gState == stateInit)
-//        {
-//            LED_StopFlashingAllLeds();
-//            OSA_EventSet(mAppEvent, gAppEvtPressedRestoreNvmBut_c);
-//        }
-//    }
-//#endif
 }
 
-/*****************************************************************************
-*Mac Application Task event processor.  This function is called to
-* process all events for the task. Events include timers, messages and any
-* other user defined events
-*
-* Interface assumptions: None
-*
-* Return value: None
-*****************************************************************************/
+static void App_UpdateLeds(uint8_t counter){
+    Led1Off(); Led2Off(); Led3Off(); Led4Off();
+    switch(counter)
+    {
+        case 0: // Magenta (Rojo + Azul)
+            Led1On();
+            Led3On();
+            break;
+        case 1: // Azul
+            Led3On();
+            break;
+        case 2: // Rojo
+            Led1On();
+            break;
+        case 3: // Verde
+            Led2On();
+            break;
+    }
+}
+static void App_SendCounterPacket(uint8_t counter){
+    nwkToMcpsMessage_t *pMsg = MSG_Alloc(sizeof(nwkToMcpsMessage_t) + 1);
+
+    if(pMsg != NULL)
+    {
+        pMsg->msgType = gMcpsDataReq_c;
+
+        pMsg->msgData.dataReq.pMsdu = (uint8_t*)pMsg + sizeof(nwkToMcpsMessage_t);
+
+        *(pMsg->msgData.dataReq.pMsdu) = counter;
+
+        FLib_MemCpy(&pMsg->msgData.dataReq.dstAddr, &mCoordInfo.coordAddress, 8);
+        FLib_MemCpy(&pMsg->msgData.dataReq.srcAddr, maMyAddress, 8);
+
+        FLib_MemCpy(&pMsg->msgData.dataReq.dstPanId, &mCoordInfo.coordPanId, 2);
+        FLib_MemCpy(&pMsg->msgData.dataReq.srcPanId, &mCoordInfo.coordPanId, 2);
+
+        pMsg->msgData.dataReq.dstAddrMode = mCoordInfo.coordAddrMode;
+        pMsg->msgData.dataReq.srcAddrMode = mAddrMode;
+
+        pMsg->msgData.dataReq.msduLength = 1;
+
+        pMsg->msgData.dataReq.txOptions = gMacTxOptionsAck_c;
+        pMsg->msgData.dataReq.msduHandle = mMsduHandle++;
+        pMsg->msgData.dataReq.securityLevel = gMacSecurityNone_c;
+
+        (void)NWK_MCPS_SapHandler(pMsg, macInstance);
+    }
+}
+
 void AppThread(osaTaskParam_t argument)
 { 
     osaEventFlags_t ev;
@@ -404,179 +340,94 @@ void AppThread(osaTaskParam_t argument)
         }
         
         /* The application state machine */
-        switch(gState)
-        {
-        case stateInit:
-                    Serial_Print(interfaceId, "Manual Configuration - Skipping Scan...\n\r", gAllowToBlock_d);
+        switch(gState){
+        	case stateInit:
+        		Serial_Print(interfaceId, "Manual Configuration - Skipping Scan...\n\r", gAllowToBlock_d);
 
-                    /* Forzamos la configuración del PAN */
-                    mCoordInfo.coordPanId = MY_PAN_ID;
-                    mCoordInfo.logicalChannel = MY_CHANNEL;
-                    mCoordInfo.coordAddrMode = gAddrModeShortAddress_c;
-                    mCoordInfo.coordAddress = COORD_SHORT_ADDR;
+        		/* Forzamos la configuración del PAN */
+        		mCoordInfo.coordPanId = MY_PAN_ID;
+        		mCoordInfo.logicalChannel = MY_CHANNEL;
+        		mCoordInfo.coordAddrMode = gAddrModeShortAddress_c;
+                mCoordInfo.coordAddress = COORD_SHORT_ADDR;
 
-                    /* Configuramos parámetros del Beacon para que el stack no lo rechace */
-                    mCoordInfo.superframeSpec.associationPermit = 1;
-                    mCoordInfo.superframeSpec.beaconOrder = 0x0F; // Non-beacon network
-                    mCoordInfo.superframeSpec.superframeOrder = 0x0F;
+                /* Configuramos parámetros del Beacon para que el stack no lo rechace */
+                mCoordInfo.superframeSpec.associationPermit = 1;
+                mCoordInfo.superframeSpec.beaconOrder = 0x0F; // Non-beacon network
+                mCoordInfo.superframeSpec.superframeOrder = 0x0F;
 
-                    /* Saltamos el escaneo e ir directamente a asociar */
-                    gState = stateAssociate;
+                gState = stateAssociate;
 
-                    /* Si prefieres ni siquiera asociar y solo empezar a transmitir:
-                       gState = stateListen;
-                    */
 
-                    OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
-                    break;
-            break;
+                OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
+                break;
+
+			case stateAssociate:
+				/* Associate to the PAN coordinator */
+				Serial_Print(interfaceId, "Associating to PAN coordinator on channel 0x", gAllowToBlock_d);
+				Serial_PrintHex(interfaceId, &(mCoordInfo.logicalChannel), 1, gPrtHexNewLine_c);
+
+				rc = App_SendAssociateRequest();
+				if(rc == errorNoError)
+					gState = stateAssociateWaitConfirm;
+				break;
             
-//        case stateScanActiveStart:
-//            /* Start the Active scan, and goto wait for confirm state. */
-//            Serial_Print(interfaceId, "\n\rStart scanning for a PAN coordinator\n\r", gAllowToBlock_d);
-//
-//            rc = App_StartScan(gScanModeActive_c);
-//            if(rc == errorNoError)
-//            {
-//                gState = stateScanActiveWaitConfirm;
-//            }
-//            break;
-//
-//        case stateScanActiveWaitConfirm:
-//            /* Stay in this state until the Scan confirm message
-//            arrives, and then goto the associate state. */
-//            if (ev & gAppEvtMessageFromMLME_c)
-//            {
-//                if (pMsgIn)
-//                {
-//                    rc = App_WaitMsg(pMsgIn, gMlmeScanCnf_c);
-//                    if(rc == errorNoError)
-//                    {
-//                        rc = App_HandleScanActiveConfirm(pMsgIn);
-//                        if(rc == errorNoError)
-//                        {
-//                            Serial_Print(interfaceId, "Found a coordinator with the following properties:\n\r", gAllowToBlock_d);
-//                            Serial_Print(interfaceId, "----------------------------------------------------", gAllowToBlock_d);
-//                            Serial_Print(interfaceId, "\n\rAddress...........0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.coordAddress, mCoordInfo.coordAddrMode == gAddrModeShortAddress_c ? 2 : 8, gPrtHexNoFormat_c);
-//                            Serial_Print(interfaceId, "\n\rPAN ID............0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.coordPanId, 2, gPrtHexNoFormat_c);
-//                            Serial_Print(interfaceId, "\n\rLogical Channel...0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, &mCoordInfo.logicalChannel, 1, gPrtHexNoFormat_c);
-//                            Serial_Print(interfaceId, "\n\rBeacon Spec.......0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.superframeSpec, 2, gPrtHexNoFormat_c);
-//                            Serial_Print(interfaceId, "\n\rLink Quality......0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, &mCoordInfo.linkQuality, 1, gPrtHexNoFormat_c);
-//                            Serial_Print(interfaceId, "\n\r\n\r", gAllowToBlock_d);
-//
-//                            gState = stateAssociate;
-//                            OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
-//                        }
-//                        else
-//                        {
-//                            Serial_Print(interfaceId, "Scan did not find a suitable coordinator\n\r", gAllowToBlock_d);
-//#if gNvmTestActive_d
-//                            if ( mCoordInfo.coordAddress && ( mAddrMode != gAddrModeNoAddress_c ) )
-//                            {
-//                                FLib_MemSet(&mCoordInfo, 0, sizeof(mCoordInfo));
-//                                FLib_MemSet(maMyAddress, 0, 8);
-//                                mAddrMode = gAddrModeNoAddress_c;
-//                                NvSaveOnIdle(&mCoordInfo, TRUE);
-//                                NvSaveOnIdle(&maMyAddress, TRUE);
-//                                NvSaveOnIdle(&mAddrMode, TRUE);
-//                            }
-//#endif
-//                            /* Restart the Active scan */
-//                            gState = stateScanActiveStart;
-//                            OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
-//                        }
-//                    }
-//                }
-//            }
-//            break;
+			case stateAssociateWaitConfirm:
+			    if (ev & gAppEvtMessageFromMLME_c){
+			        if (pMsgIn){
+			            rc = App_WaitMsg(pMsgIn, gMlmeAssociateCnf_c);
+			            if(rc == errorNoError){
+			                rc = App_HandleAssociateConfirm(pMsgIn);
+			                if (rc == errorNoError){
+			                    /* --- INICIO DE LÓGICA REQUERIDA --- */
+			                    mAppCounter = 0;
+			                    App_UpdateLeds(mAppCounter);
+			                    App_SendCounterPacket(mAppCounter);
 
-        case stateAssociate:
-            /* Associate to the PAN coordinator */
-            Serial_Print(interfaceId, "Associating to PAN coordinator on channel 0x", gAllowToBlock_d);
-            Serial_PrintHex(interfaceId, &(mCoordInfo.logicalChannel), 1, gPrtHexNewLine_c);
-            
-            rc = App_SendAssociateRequest();
-            if(rc == errorNoError)
-                gState = stateAssociateWaitConfirm;
-            break; 
-            
-        case stateAssociateWaitConfirm:
-                    /* Esperamos en este estado hasta que llegue el mensaje de confirmación de Asociación */
-                    if (ev & gAppEvtMessageFromMLME_c)
-                    {
-                        if (pMsgIn)
-                        {
-                            rc = App_WaitMsg(pMsgIn, gMlmeAssociateCnf_c);
-                            if(rc == errorNoError)
-                            {
-                                rc = App_HandleAssociateConfirm(pMsgIn);
+			                    // Iniciamos el timer de 5 segundos estrictos
+			                    TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c, 5000, AppPollWaitTimeout, NULL);
+			                    Serial_Print(interfaceId, " [EXITO] Conectado al Coordinador!\n\r", gAllowToBlock_d);
+			                    Serial_Print(interfaceId, "\n\r Conectado a PAN ID 5555 CHANNEL 15\n\r", gAllowToBlock_d);
 
-                                /* --- EVALUAMOS SI LA CONEXIÓN FUE EXITOSA --- */
-                                if (rc == errorNoError)
-                                {
-                                    /* MENSAJE DE ÉXITO */
-                                    Serial_Print(interfaceId, "\n\r=================================================\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " [EXITO] Conectado al Coordinador!\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " -> PAN ID: 0x5555\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " -> Canal: 15\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " -> Mi Direccion: 0x", gAllowToBlock_d);
-                                    Serial_PrintHex(interfaceId, maMyAddress, mAddrMode == gAddrModeShortAddress_c ? 2 : 8, gPrtHexNoFormat_c);
-                                    Serial_Print(interfaceId, "\n\r=================================================\n\r\n\r", gAllowToBlock_d);
 
-        #if gNvmTestActive_d
-                                    NvSaveOnIdle(&mCoordInfo, TRUE);
-                                    NvSaveOnIdle(&maMyAddress, TRUE);
-                                    NvSaveOnIdle(&mAddrMode, TRUE);
-        #endif
-                                    /* Iniciamos el timer y pasamos a escuchar (Listen) */
-                                    TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c ,mPollInterval, AppPollWaitTimeout, NULL );
-                                    gState = stateListen;
-                                    OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
-                                }
-                                else
-                                {
-                                    /* MENSAJE DE FRACASO */
-                                    Serial_Print(interfaceId, "\n\r=================================================\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " [ERROR] No se pudo conectar al Coordinador\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " -> Verifique que el Coordinador PAN 0x5555 Canal 15 este encendido.\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, " -> Reintentando conexion...\n\r", gAllowToBlock_d);
-                                    Serial_Print(interfaceId, "=================================================\n\r\n\r", gAllowToBlock_d);
+			                    gState = stateListen;
+			                    OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
+			                }
+        				else{
+        					Serial_Print(interfaceId, "\n\r=================================================\n\r", gAllowToBlock_d);
+        					Serial_Print(interfaceId, " [ERROR] No se pudo conectar al Coordinador\n\r", gAllowToBlock_d);
+        					Serial_Print(interfaceId, " -> Verifique que el Coordinador PAN 0x5555 Canal 15 este encendido.\n\r", gAllowToBlock_d);
+        					Serial_Print(interfaceId, " -> Reintentando conexion...\n\r", gAllowToBlock_d);
+        					Serial_Print(interfaceId, "=================================================\n\r\n\r", gAllowToBlock_d);
 
-        #if gNvmTestActive_d
-                                    FLib_MemSet(&mCoordInfo, 0, sizeof(mCoordInfo));
-                                    FLib_MemSet(maMyAddress, 0, 8);
-                                    mAddrMode = gAddrModeNoAddress_c;
-                                    NvSaveOnIdle(&mCoordInfo, TRUE);
-                                    NvSaveOnIdle(&maMyAddress, TRUE);
-                                    NvSaveOnIdle(&mAddrMode, TRUE);
-        #endif
-                                    /* Si falla, volvemos al estado inicial para que asigne las variables y reintente */
-                                    gState = stateInit;
-                                    OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
-                                }
-                            }
-                        }
-                    }
-                    break;
-            break; 
+        	#if gNvmTestActive_d
+        					FLib_MemSet(&mCoordInfo, 0, sizeof(mCoordInfo));
+        					FLib_MemSet(maMyAddress, 0, 8);
+        					mAddrMode = gAddrModeNoAddress_c;
+        					NvSaveOnIdle(&mCoordInfo, TRUE);
+        					NvSaveOnIdle(&maMyAddress, TRUE);
+        					NvSaveOnIdle(&mAddrMode, TRUE);
+        	#endif
+        					// si falla, volvemos al estado inicial para que asigne las variables y reintente
+        					gState = stateInit;
+        					OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
+        				}
+        			}
+        		}
+        	}
+        	break;
 
-        case stateListen:
-            /* Transmit to coordinator data received from UART. */
-            if (ev & gAppEvtMessageFromMLME_c)
-            {
-                if (pMsgIn)
-                {
-                    /* Process it */
+			case stateListen:
+            if (ev & gAppEvtMessageFromMLME_c){
+                if (pMsgIn){
                     rc = App_HandleMlmeInput(pMsgIn);
                 }
             }
 
-            if (ev & gAppEvtRxFromUart_c)
-            {
+            if (ev & gAppEvtRxFromUart_c){
                 /* get byte from UART */
                 App_TransmitUartData();
             }
-#if gNvmTestActive_d
+			#if gNvmTestActive_d
             if (timeoutCounter >= mDefaultValueOfTimeoutError_c)
             {
                   Serial_Print(interfaceId, "\n\rTimeout - No data received.\n\r\n\r", gAllowToBlock_d);
@@ -590,7 +441,29 @@ void AppThread(osaTaskParam_t argument)
                   OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
                   gState = stateInit;
             }
-#endif
+			#endif
+            // Lógica para SW3 (Contador = 0)
+            if (ev & gAppEvtSW3Pressed_c) {
+            	mAppCounter = 0;
+            	App_UpdateLeds(mAppCounter);
+            	App_SendCounterPacket(mAppCounter);
+
+                TMR_StopTimer(mTimer_c);
+                TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c, 5000, AppPollWaitTimeout, NULL);
+                Serial_Print(interfaceId, "SW3 Presionado: Counter = 0\n\r", gAllowToBlock_d);
+             }
+
+             // Lógica para SW4 (Contador = 2)
+             if (ev & gAppEvtSW4Pressed_c){
+                mAppCounter = 2; // Especificación: SW4 pone el contador en 2
+                App_UpdateLeds(mAppCounter);
+                App_SendCounterPacket(mAppCounter);
+
+                /* Reiniciamos el timer para que el próximo paquete sea en 5 segundos */
+                TMR_StopTimer(mTimer_c);
+                TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c, 5000, AppPollWaitTimeout, NULL);
+                Serial_Print(interfaceId, "SW4 Presionado: Counter = 2\n\r", gAllowToBlock_d);
+              }
             break;
         }
 
@@ -626,21 +499,9 @@ void AppThread(osaTaskParam_t argument)
         {
             break;
         }
-    } /* while(1) */
+    }
 }
 
-/************************************************************************************
-*************************************************************************************
-* Private functions
-*************************************************************************************
-************************************************************************************/
-
-/*****************************************************************************
-* UartRxCallBack
-*
-* This callback is triggered when a new byte is received over the UART
-*
-*****************************************************************************/
 static void UartRxCallBack(void *pData)
 {
     uint8_t pressedKey;
@@ -665,147 +526,6 @@ static void UartRxCallBack(void *pData)
 
 }
 
-/******************************************************************************
-* The App_StartScan(scanType) function will start the scan process of the
-* specified type in the MAC. This is accomplished by allocating a MAC message,
-* which is then assigned the desired scan parameters and sent to the MLME
-* service access point.
-* The function may return either of the following values:
-*   errorNoError:          The Scan message was sent successfully.
-*   errorInvalidParameter: The MLME service access point rejected the
-*                          message due to an invalid parameter.
-*   errorAllocFailed:      A message buffer could not be allocated.
-*
-******************************************************************************/
-//static uint8_t App_StartScan(macScanType_t scanType)
-//{
-//  mlmeMessage_t *pMsg;
-//  mlmeScanReq_t *pScanReq;
-//
-//  Serial_Print(interfaceId, "Sending the MLME-Scan Request message to the MAC...", gAllowToBlock_d);
-//
-//  /* Allocate a message for the MLME (We should check for NULL). */
-//  pMsg = MSG_AllocType(mlmeMessage_t);
-//  if(pMsg != NULL)
-//  {
-//    /* This is a MLME-SCAN.req command */
-//    pMsg->msgType = gMlmeScanReq_c;
-//    /* Create the Scan request message data. */
-//    pScanReq = &pMsg->msgData.scanReq;
-//    /* gScanModeED_c, gScanModeActive_c, gScanModePassive_c, or gScanModeOrphan_c */
-//    pScanReq->scanType = scanType;
-//
-//#ifdef gPHY_802_15_4g_d
-//    pScanReq->channelPage = gChannelPageId9_c;
-//    pScanReq->scanChannels[0] = mDefaultValueOfChannel_c;
-//    FLib_MemSet(pScanReq->scanChannels+1, 0, sizeof(channelMask_t)-sizeof(uint32_t));
-//#else
-//    pScanReq->scanChannels = mDefaultValueOfChannel_c;
-//#endif
-//
-//    /* Duration per channel 0-14 (dc). T[sec] = (16*960*((2^dc)+1))/1000000.
-//       A scan duration of 3 on 16 channels approximately takes 2 secs. */
-//    pScanReq->scanDuration = 3;
-//    pScanReq->securityLevel = gMacSecurityNone_c;
-//
-//    /* Send the Scan request to the MLME. */
-//    if(NWK_MLME_SapHandler( pMsg, macInstance ) == gSuccess_c)
-//    {
-//      Serial_Print(interfaceId, "Done\n\r", gAllowToBlock_d);
-//      return errorNoError;
-//    }
-//    else
-//    {
-//      Serial_Print(interfaceId, "Invalid parameter!\n\r", gAllowToBlock_d);
-//      return errorInvalidParameter;
-//    }
-//  }
-//  else
-//  {
-//    /* Allocation of a message buffer failed. */
-//    Serial_Print(interfaceId, "Message allocation failed!\n\r", gAllowToBlock_d);
-//    return errorAllocFailed;
-//  }
-//}
-//
-///******************************************************************************
-//* The App_HandleScanActiveConfirm(nwkMessage_t *pMsg) function will handle the
-//* Active Scan confirm message received from the MLME when the Active scan has
-//* completed. The message contains a list of PAN descriptors. Based on link
-//* quality inforamtion in the pan descriptors the nearest coordinator is chosen.
-//* The corresponding pan descriptor is stored in the global variable mCoordInfo.
-//*
-//* The function may return either of the following values:
-//*   errorNoError:       A suitable pan descriptor was found.
-//*   errorNoScanResults: No scan results were present in the confirm message.
-//*
-//******************************************************************************/
-//static uint8_t App_HandleScanActiveConfirm(nwkMessage_t *pMsg)
-//{
-//  void    *pBlock;
-//  uint8_t panDescListSize = pMsg->msgData.scanCnf.resultListSize;
-//  uint8_t rc = errorNoScanResults;
-//  uint8_t j;
-//  uint8_t bestLinkQuality = 0;
-//
-//  panDescriptorBlock_t *pDescBlock = pMsg->msgData.scanCnf.resList.pPanDescriptorBlockList;
-//  panDescriptor_t *pPanDesc;
-//
-//
-//  /* Check if the scan resulted in any coordinator responses. */
-//
-//  if (panDescListSize > 0)
-//  {
-//    /* Check all PAN descriptors. */
-//    while (NULL != pDescBlock)
-//    {
-//      for (j = 0; j < pDescBlock->panDescriptorCount; j++)
-//      {
-//        pPanDesc = &pDescBlock->panDescriptorList[j];
-//
-//        /* Only attempt to associate if the coordinator
-//           accepts associations and is non-beacon. */
-//        if( ( pPanDesc->superframeSpec.associationPermit ) &&
-//            ( pPanDesc->superframeSpec.beaconOrder == 0x0F) )
-//        {
-//
-//          /* Find the nearest coordinator using the link quality measure. */
-//          if(pPanDesc->linkQuality > bestLinkQuality)
-//          {
-//            /* Save the information of the coordinator candidate. If we
-//               find a better candiate, the information will be replaced. */
-//            FLib_MemCpy(&mCoordInfo, pPanDesc, sizeof(panDescriptor_t));
-//            bestLinkQuality = pPanDesc->linkQuality;
-//            rc = errorNoError;
-//          }
-//        }
-//      }
-//
-//      /* Free current block */
-//      pBlock = pDescBlock;
-//      pDescBlock = pDescBlock->pNext;
-//      MSG_Free(pBlock);
-//    }
-//  }
-//
-//  if (pDescBlock)
-//      MSG_Free(pDescBlock);
-//
-//  return rc;
-//}
-
-/******************************************************************************
-* The App_SendAssociateRequest(void) will create an Associate Request message
-* and send it to the coordinator it wishes to associate to. The function uses
-* information gained about the coordinator during the scan procedure.
-*
-* The function may return either of the following values:
-*   errorNoError:          The Associate Request message was sent successfully.
-*   errorInvalidParameter: The MLME service access point rejected the
-*                          message due to an invalid parameter.
-*   errorAllocFailed:      A message buffer could not be allocated.
-*
-******************************************************************************/
 static uint8_t App_SendAssociateRequest(void)
 {
   mlmeMessage_t *pMsg;
@@ -859,16 +579,6 @@ static uint8_t App_SendAssociateRequest(void)
   }
 }
 
-/******************************************************************************
-* The App_HandleAssociateConfirm(nwkMessage_t *pMsg) function will handle the
-* Associate confirm message received from the MLME when the Association
-* procedure has completed. The message contains the short address that the
-* coordinator has assigned to us. This address is 0xfffe if we did not specify
-* the gCapInfoAllocAddr_c flag in the capability info field of the Associate
-* request. The address and address mode are saved in global variables. They
-* will be used in the next demo application when sending data.
-*
-******************************************************************************/
 static uint8_t App_HandleAssociateConfirm(nwkMessage_t *pMsg)
 {
   /* If the coordinator assigns a short address of 0xfffe then,
@@ -937,18 +647,6 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg)
           timeoutCounter = 0;
       }
 #endif
-//#if mEnterLowPowerWhenIdle_c
-//    lowPowerCounter++;
-//    if ( lowPowerCounter > mDefaultValueOfMlmeHandlersToAllowSleep_c)
-//    {
-//        Led1Off();
-//        Led2Off();
-//        Led3Off();
-//        Led4Off();
-//        lowPowerCounter = 0;
-//        PWR_AllowDeviceToSleep();
-//    }
-//#endif
     }
     break;
 
@@ -1113,39 +811,19 @@ static void App_TransmitUartData(void)
 * for building the MLME-Poll Request message. The message is sent to the MLME
 * service access point in the MAC.
 ******************************************************************************/
-static void    AppPollWaitTimeout(void *pData)
+static void AppPollWaitTimeout(void *pData)
 {
-   /* Just to avoid the compiler warning */
-  (void)pData;
+    /* 1. Incrementar contador rango 0-3 */
+    mAppCounter = (mAppCounter + 1) % 4;
 
-  /* Check if we are permitted, and if it is time to send a poll request.
-     The poll interval is adjusted dynamically to the current band-width
-     requirements. */
-  if( !mWaitPollConfirm )
-  {
-    /* This is an MLME-POLL.req command. */
-    mlmeMessage_t *pMlmeMsg = MSG_AllocType(mlmeMessage_t);
-    if(pMlmeMsg)
-    {
-      /* Create the Poll Request message data. */
-      pMlmeMsg->msgType = gMlmePollReq_c;
+    /* 2. Actualizar LEDs */
+    App_UpdateLeds(mAppCounter);
 
-      /* Use the coordinator information we got from the Active Scan. */
-      FLib_MemCpy(&pMlmeMsg->msgData.pollReq.coordAddress, &mCoordInfo.coordAddress, 8);
-      FLib_MemCpy(&pMlmeMsg->msgData.pollReq.coordPanId, &mCoordInfo.coordPanId, 2);
-      pMlmeMsg->msgData.pollReq.coordAddrMode = mCoordInfo.coordAddrMode;
-      pMlmeMsg->msgData.pollReq.securityLevel = gMacSecurityNone_c;
+    /* 3. Enviar paquete */
+    App_SendCounterPacket(mAppCounter);
 
-      /* Send the Poll Request to the MLME. */
-      if( NWK_MLME_SapHandler( pMlmeMsg, macInstance ) == gSuccess_c )
-      {
-        /* Do not allow another Poll request before the confirm is received. */
-        mWaitPollConfirm = TRUE;
-      }
-    }
-  }
- /* Restart timer. */
-  TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c ,mPollInterval, AppPollWaitTimeout, NULL );
+    /* 4. Reiniciar Timer (5 segundos) */
+    TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c, 5000, AppPollWaitTimeout, NULL);
 }
 
 /*****************************************************************************
@@ -1153,23 +831,25 @@ static void    AppPollWaitTimeout(void *pData)
 * Interface assumptions: None
 * Return value: None
 *****************************************************************************/
-static void App_HandleKeys
-  (
-  key_event_t events  /*IN: Events from keyboard modul */
-  )
-{
+static void App_HandleKeys(key_event_t events  ){
 #if gKBD_KeysCount_c > 0
-    switch ( events )
-    {
+    switch ( events ){
     case gKBD_EventLongSW1_c:
         OSA_EventSet(mAppEvent, gAppEvtPressedRestoreNvmBut_c);
-    case gKBD_EventLongSW2_c:
-    case gKBD_EventLongSW3_c:
-    case gKBD_EventLongSW4_c:
-    case gKBD_EventSW1_c:
-    case gKBD_EventSW2_c:
+        break;
+
     case gKBD_EventSW3_c:
+    	if(gState == stateListen) {
+    		OSA_EventSet(mAppEvent, gAppEvtSW3Pressed_c);
+    	}
+    	break;
     case gKBD_EventSW4_c:
+    	if(gState == stateListen) {
+    		OSA_EventSet(mAppEvent, gAppEvtSW4Pressed_c);
+    	}
+    	break;
+    default:
+    	break;
 #if gTsiSupported_d
     case gKBD_EventSW5_c:
     case gKBD_EventSW6_c:

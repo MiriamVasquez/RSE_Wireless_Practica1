@@ -1,5 +1,5 @@
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\drivers/fsl_lpuart.h:513:20:LPUART_EnableTx	16	static
-C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\frdmkw41z_wireless_examples_ieee_802_15_4_mwa_coordinator_freertos\drivers/fsl_lpuart.h:533:20:LPUART_EnableRx	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\drivers/fsl_lpuart.h:513:20:LPUART_EnableTx	16	static
+C:\Users\Miriam\Documents\MCUXpressoIDE_11.10.0_3148\REDES\mwa_coordinator_freertos\drivers/fsl_lpuart.h:533:20:LPUART_EnableRx	16	static
 ../utilities/fsl_debug_console.c:232:10:DbgConsole_Init	48	static
 ../utilities/fsl_debug_console.c:334:10:DbgConsole_Deinit	8	static
 ../utilities/fsl_debug_console.c:393:5:DbgConsole_Printf	16	static
