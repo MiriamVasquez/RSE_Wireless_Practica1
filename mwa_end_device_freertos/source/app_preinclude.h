@@ -38,6 +38,7 @@
 #define gSerialMgrRxBufSize_c           256
 #define gKBD_KeysCount_c                2
 #define gLEDsOnTargetBoardCnt_c         4
+#define gLedRgbEnabled_d                TRUE
 #define mEnterLowPowerWhenIdle_c        0
 #define cPWR_DeepSleepMode              3
 #define gNvStorageIncluded_d            1

@@ -38,5 +38,6 @@
 #define gSerialMgrRxBufSize_c           256
 #define gKBD_KeysCount_c                2
 #define gLEDsOnTargetBoardCnt_c         4
+#define gLedRgbEnabled_d                TRUE
 
 #endif /* __APP_PREINCLUDE_H__ */

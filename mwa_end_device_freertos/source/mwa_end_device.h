@@ -25,7 +25,8 @@
 *************************************************************************************
 ************************************************************************************/
 
-#define mMacExtendedAddress_c      (0xFFFFFFFFFFFFFFFF)
+/* Extended MAC address - CAMBIAR para cada End Device distinto */
+#define mMacExtendedAddress_c      (0xAAAAAAAAAAAA0005)
 
 #ifndef gNvmTestActive_d
 #define gNvmTestActive_d           (0)
@@ -85,6 +86,8 @@ enum {
 #define gAppEvtMessageFromMLME_c       (1 << 2)
 #define gAppEvtMessageFromMCPS_c       (1 << 3)
 #define gAppEvtPressedRestoreNvmBut_c  (1 << 4)
+#define gAppEvtSW3Pressed_c            (1 << 5)
+#define gAppEvtSW4Pressed_c            (1 << 6)
 
 /* Error codes */
 enum {

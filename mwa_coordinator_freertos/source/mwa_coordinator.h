@@ -13,12 +13,12 @@
 #ifndef _APP_H_
 #define _APP_H_
 
-
 /*! *********************************************************************************
 *************************************************************************************
 * Include
 *************************************************************************************
 ********************************************************************************** */
+#include "EmbeddedTypes.h"
 
 /************************************************************************************
 *************************************************************************************
@@ -32,16 +32,20 @@
   #define mDefaultValueOfChannel_c (0x07FFF800)
 #endif
 
-#define mMacExtendedAddress_c    (0x1111111111111111)
+/* Extended MAC address del Coordinador - unica */
+#define mMacExtendedAddress_c    (0x1111111111110005)
 
-/* Set the Coordinator short address */ 
+/* Set the Coordinator short address */
 #define mDefaultValueOfShortAddress_c     0x0000
 
-/* Set the Coordinator PanID */ 
+/* Set the Coordinator PanID - Equipo 5 */
 #define mDefaultValueOfPanId_c            0x5555
 
 /* Maximum number of outstanding packets */
 #define mDefaultValueOfMaxPendingDataPackets_c 2
+
+/* Maximo de nodos que puede almacenar la estructura (Fase 2) */
+#define MAX_ASSOCIATED_NODES  5
 
 /************************************************************************************
 *************************************************************************************
@@ -59,8 +63,8 @@ enum {
   stateListen
 };
 
-/* Events that are passed to the application task. 
-   Are defined as byte masks to make possible 
+/* Events that are passed to the application task.
+   Are defined as byte masks to make possible
    send multiple events to the task */
 
 #define gAppEvtDummyEvent_c            (1 << 0)
@@ -80,6 +84,17 @@ enum {
   errorNoScanResults
 };
 
+/************************************************************************************
+* Estructura para almacenar informacion de nodos asociados (Fase 2)
+************************************************************************************/
+typedef struct {
+    uint16_t shortAddress;      /* Short Address asignada */
+    uint64_t extendedAddress;   /* Extended (MAC) Address del nodo */
+    bool_t   rxOnWhenIdle;      /* TRUE si el nodo mantiene RX encendido */
+    bool_t   isFFD;             /* TRUE = FFD, FALSE = RFD */
+    bool_t   isUsed;            /* TRUE si esta entrada esta ocupada */
+} nodeInfo_t;
+
 /******************************************************************************
 *******************************************************************************
 * Public Prototypes
@@ -95,4 +110,4 @@ enum {
 #endif
 
 /**********************************************************************************/
-#endif /* _MAPP_H_ */
+#endif /* _APP_H_ */
